@@ -1,9 +1,10 @@
-name: CI
+name: conformance
 
-on: [push, pull_request]
+on:
+  push:
 
 jobs:
-  pipeline:
+  conformance:
     name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -19,15 +20,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
 
       - run: npm i -g @apidevtools/swagger-cli@4 @redocly/cli @useoptic/optic
         id: globals
 
       - run: optic diff beacon-node-oapi.yaml --base main --check
         id: optic
-
-
+        
       - name: Lint spec
         run: redocly lint ./beacon-node-oapi.yaml
         id: lint

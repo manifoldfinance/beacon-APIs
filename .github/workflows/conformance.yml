@@ -1,0 +1,37 @@
+name: conformance
+
+on:
+  push:
+
+jobs:
+  conformance:
+    name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['16.x']
+        os: ['ubuntu-latest']
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - run: npm i -g @apidevtools/swagger-cli@4 @redocly/cli @useoptic/optic
+        id: globals
+
+      - run: optic diff beacon-node-oapi.yaml --base main --check
+        id: optic
+        
+      - name: Lint spec
+        run: redocly lint ./beacon-node-oapi.yaml
+        id: lint
+
+      - name: Bundle spec
+        run: "swagger-cli bundle ./beacon-node-oapi.yaml -r -t yaml -o ./deploy/beacon-node-oapi.yaml"
+        id: bundle
